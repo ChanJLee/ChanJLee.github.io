@@ -3,14 +3,23 @@
 <head>
   <meta charset="utf-8">
   
-  <title>Hexo</title>
+  <title>Dump dex | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Hexo">
-<meta property="og:url" content="http://yoursite.com/index.html">
+  <meta name="description" content="背景 大约是一个月前，我接触到了一些脱壳的技术。在众多脱壳技术里，有一种技术就是dump内存。以之前的加壳技术来看，虽然使用了各种技术保护dex不能被静态分析。但是，它最终还是需要加载到内存中。因此一旦加载到了内存中，也就是一个完整的dex文件。这时候，如果我们能够attach上其他进程的内存，是不是就可以通过扫描内存">
+<meta name="keywords" content="ptrace, dex, android, hack">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Dump dex">
+<meta property="og:url" content="http://yoursite.com/2017/11/26/Dump-dex/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="背景 大约是一个月前，我接触到了一些脱壳的技术。在众多脱壳技术里，有一种技术就是dump内存。以之前的加壳技术来看，虽然使用了各种技术保护dex不能被静态分析。但是，它最终还是需要加载到内存中。因此一旦加载到了内存中，也就是一个完整的dex文件。这时候，如果我们能够attach上其他进程的内存，是不是就可以通过扫描内存，查找dex文件的magic number，以此来找到那些被保护的dex文件。">
+<meta property="og:image" content="http://yoursite.com/2017/11/26/Dump-dex/WechatIMG78.jpeg">
+<meta property="og:image" content="http://yoursite.com/2017/11/26/Dump-dex/WechatIMG80.jpeg">
+<meta property="og:image" content="http://yoursite.com/2017/11/26/Dump-dex/WechatIMG81.jpeg">
+<meta property="og:updated_time" content="2017-12-30T13:57:40.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hexo">
+<meta name="twitter:title" content="Dump dex">
+<meta name="twitter:description" content="背景 大约是一个月前，我接触到了一些脱壳的技术。在众多脱壳技术里，有一种技术就是dump内存。以之前的加壳技术来看，虽然使用了各种技术保护dex不能被静态分析。但是，它最终还是需要加载到内存中。因此一旦加载到了内存中，也就是一个完整的dex文件。这时候，如果我们能够attach上其他进程的内存，是不是就可以通过扫描内存，查找dex文件的magic number，以此来找到那些被保护的dex文件。">
+<meta name="twitter:image" content="http://yoursite.com/2017/11/26/Dump-dex/WechatIMG78.jpeg">
   
     <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -59,9 +68,7 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-    <article id="post-Dump-dex" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-Dump-dex" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2017/11/26/Dump-dex/" class="article-date">
   <time datetime="2017-11-26T07:00:47.000Z" itemprop="datePublished">2017-11-26</time>
@@ -74,8 +81,8 @@
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/11/26/Dump-dex/">Dump dex</a>
+    <h1 class="article-title" itemprop="name">
+      Dump dex
     </h1>
   
 
@@ -128,93 +135,19 @@
     </footer>
   </div>
   
-</article>
-
-
+    
+<nav id="article-nav">
   
-    <article id="post-First-Post" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2017/11/20/First-Post/" class="article-date">
-  <time datetime="2017-11-20T13:55:43.000Z" itemprop="datePublished">2017-11-20</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/11/20/First-Post/">First Post</a>
-    </h1>
+    <a href="/2017/11/20/First-Post/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Ancien</strong>
+      <div class="article-nav-title">First Post</div>
+    </a>
   
+</nav>
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="This-is-My-First-Blog-on-github"><a href="#This-is-My-First-Blog-on-github" class="headerlink" title="This is My First Blog on github"></a>This is My First Blog on github</h1><p>之前本科时候的<a href="http://blog.csdn.net/u013022222" target="_blank" rel="noopener">博客地址</a></p>
-<p><img src="/2017/11/20/First-Post/image.jpg" alt="image"></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Main</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"hello"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/11/20/First-Post/" data-id="cjbtetu5b0003g5shkf0nkezb" class="article-share-link">Partager</a>
-      
-      
-    </footer>
-  </div>
   
 </article>
-
-
-  
-    <article id="post-hello-world" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2017/11/20/hello-world/" class="article-date">
-  <time datetime="2017-11-20T13:39:49.000Z" itemprop="datePublished">2017-11-20</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/11/20/hello-world/">Hello World</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/11/20/hello-world/" data-id="cjbtetu5d0004g5sh46enev6t" class="article-share-link">Partager</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
 
 </section>
         
