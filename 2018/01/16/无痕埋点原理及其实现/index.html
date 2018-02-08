@@ -11,7 +11,7 @@
 <meta property="og:url" content="http://yoursite.com/2018/01/16/无痕埋点原理及其实现/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="背景 现在发现自己的拖延症是越来越严重了，最近一直在忙于写自己的一些库，拉下了更新博客，这篇博客创建于一月，然而我在一个月后才开始写。关于无痕打点，我在本科的时候实现了一套，当时打算在扇贝的app中使用。不过后来可能考虑到要实现一套后台，公司还是使用了腾讯推出的无痕埋点库。不过，你懂的，第三方库总需要一些跟他库功能毫无关系的权限，流不流氓心里自然明了。  什么是无痕埋点 前端自动采集全部事件并上报">
-<meta property="og:updated_time" content="2018-02-08T15:05:30.000Z">
+<meta property="og:updated_time" content="2018-02-08T15:25:00.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="无痕埋点原理及其实现">
 <meta name="twitter:description" content="背景 现在发现自己的拖延症是越来越严重了，最近一直在忙于写自己的一些库，拉下了更新博客，这篇博客创建于一月，然而我在一个月后才开始写。关于无痕打点，我在本科的时候实现了一套，当时打算在扇贝的app中使用。不过后来可能考虑到要实现一套后台，公司还是使用了腾讯推出的无痕埋点库。不过，你懂的，第三方库总需要一些跟他库功能毫无关系的权限，流不流氓心里自然明了。  什么是无痕埋点 前端自动采集全部事件并上报">
@@ -105,11 +105,16 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AppCompatDelegateImplV14</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function">View <span class="title">callActivityOnCreateView</span><span class="params">(View parent, String name, Context context, AttributeSet attrs)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">switch</span> (name) &#123;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">"TextView"</span>:</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">new</span> AppCompatTextView(context, attrs);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">super</span>.callActivityOnCreateView(parent, name, context, attrs);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>但是，如果其他人重写了view中的方法，就有可能不会调用到打点的代码。所以这种方式的弊端也就显然易见了。</p>
 <p>不过后来我想到如果能在编译的时候在每个事件响应前的字节码之前插入一些代码，不就实现了无痕埋点了吗。幸运的时关于这种操作已经有了非常成熟的实现：<a href="http://asm.ow2.org/" target="_blank" rel="noopener">ASM</a>。ASM是一种操作字节码的库。我们平时的一些性能测试都是借助这个库实现的。比如android studio里的性能分析工具，它有一个功能就是计算每个函数调用的实现，其实现就是通过asm修改字节码，然后在函数开始已经函数末尾插入时间戳，最后计算下间隔就得到了每个函数执行的时间。至于如何在编译的时候使用ASM，这个也已经有了很成熟的实现：<a href="http://tools.android.com/tech-docs/new-build-system/transform-api" target="_blank" rel="noopener">transform</a></p>
-<h3 id="生成事件的唯一表示"><a href="#生成事件的唯一表示" class="headerlink" title="生成事件的唯一表示"></a>生成事件的唯一表示</h3>
+<h3 id="生成事件的唯一表示"><a href="#生成事件的唯一表示" class="headerlink" title="生成事件的唯一表示"></a>生成事件的唯一表示</h3><p>解决了插入打点代码，下面就是要解决对每个响应事件生成唯一标示。</p>
+<p>虽然响应事件可以分为, click, long press, 之类的，但是针对扇贝的业务只需要关心click就可以了。所以我们要做的就是定位这个view。</p>
+<p>至于如何定位，就是通过</p>
+<p>[activity]_[view<em>id]</em>[texture] 来实现</p>
+<p>activity 指明当前是在哪个页面，view id可以通过反射R类拿到field的name，这样可以避免每次view_id都不同的情况，虽然field name也可能变，但是一个可读性的标示总是比数字要好很多的。texture就是当前这个控件上的文案，通常button上的文案都不会有特殊字符，当然为了做到万无一失，你可以通过特殊的编码来使得这些文案不会出现奇怪的字符。</p>
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/01/16/无痕埋点原理及其实现/" data-id="cjdemxyh70002gesh9k5xxl9l" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2018/01/16/无痕埋点原理及其实现/" data-id="cjdenmps80004mash42nufdyg" class="article-share-link">Share</a>
       
       
     </footer>
