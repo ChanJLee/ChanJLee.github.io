@@ -83,11 +83,31 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><blockquote>
+<p>现在发现自己的拖延症是越来越严重了，最近一直在忙于写自己的一些库，拉下了更新博客，这篇博客创建于一月，然而我在一个月后才开始写。关于无痕打点，我在本科的时候实现了一套，当时打算在<a href="www.shanbay.com">扇贝</a>的app中使用。不过后来可能考虑到要实现一套后台，公司还是使用了腾讯推出的无痕埋点库。不过，你懂的，第三方库总需要一些跟他库功能毫无关系的权限，流不流氓心里自然明了。</p>
+</blockquote>
+<h2 id="什么是无痕埋点"><a href="#什么是无痕埋点" class="headerlink" title="什么是无痕埋点"></a>什么是无痕埋点</h2><blockquote>
+<p>前端自动采集全部事件并上报埋点数据，在后端数据计算时过滤出有用数据，代表方案是国内的GrowingIO。</p>
+</blockquote>
+<h2 id="打点技术的现状"><a href="#打点技术的现状" class="headerlink" title="打点技术的现状"></a>打点技术的现状</h2><p>目前打点技术可以分为三类</p>
+<ul>
+<li><p>代码埋点，即在需要埋点的节点调用接口直接上传埋点数据，友盟、百度统计等第三方数据统计服务商大都采用这种方案</p>
+</li>
+<li><p>可视化埋点，即通过可视化工具配置采集节点，在前端自动解析配置并上报埋点数据，从而实现所谓的“无痕埋点”， 代表方案是已经开源的Mixpanel。</p>
+</li>
+<li><p>无痕埋点，它并不是真正的不需要埋点，而是前端自动采集全部事件并上报埋点数据，在后端数据计算时过滤出有用数据，代表方案是国内的GrowingIO</p>
+</li>
+</ul>
+<h2 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h2><p>要实现无痕埋点，首先要解决如何要解决在前端每个事件响应处插入埋点代码，其次要解决对响应每个事件的控件做唯一表示，最后对这些唯一表示绑定相关的业务数据。</p>
+<h3 id="在事件响应处插入埋点代码"><a href="#在事件响应处插入埋点代码" class="headerlink" title="在事件响应处插入埋点代码"></a>在事件响应处插入埋点代码</h3><p>对于在每个事件响应处插入代码，实现的方式有很多，比如实现自己的AppCompatDelegate。读者可以去参考AppCompatDelegateImplV14的实现。我们在inflate一个布局的时候，都会调用AppCompatDelegate的方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AppCompatDelegateImplV14</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function">View <span class="title">callActivityOnCreateView</span><span class="params">(View parent, String name, Context context, AttributeSet attrs)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">switch</span> (name) &#123;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">"TextView"</span>:</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">new</span> AppCompatTextView(context, attrs);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">super</span>.callActivityOnCreateView(parent, name, context, attrs);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>但是，如果其他人重写了view中的方法，就有可能不会调用到打点的代码。所以这种方式的弊端也就显然易见了。</p>
+<p>不过后来我想到如果能在编译的时候在每个事件响应前的字节码之前插入一些代码，不就实现了无痕埋点了吗。幸运的时关于这种操作已经有了非常成熟的实现：<a href="http://asm.ow2.org/" target="_blank" rel="noopener">ASM</a>。ASM是一种操作字节码的库。我们平时的一些性能测试都是借助这个库实现的。比如android studio里的性能分析工具，它有一个功能就是计算每个函数调用的实现，其实现就是通过asm修改字节码，然后在函数开始已经函数末尾插入时间戳，最后计算下间隔就得到了每个函数执行的时间。至于如何在编译的时候使用ASM，这个也已经有了很成熟的实现：<a href="http://tools.android.com/tech-docs/new-build-system/transform-api" target="_blank" rel="noopener">transform</a></p>
+<h3 id="生成事件的唯一表示"><a href="#生成事件的唯一表示" class="headerlink" title="生成事件的唯一表示"></a>生成事件的唯一表示</h3>
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/01/16/无痕埋点原理及其实现/" data-id="cjchq3vfl0004zgshw69enx0l" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2018/01/16/无痕埋点原理及其实现/" data-id="cjdemxyh70002gesh9k5xxl9l" class="article-share-link">Share</a>
       
       
     </footer>
@@ -156,7 +176,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/11/26/Dump-dex/" data-id="cjchq3vey0001zgshfajiz0vs" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2017/11/26/Dump-dex/" data-id="cjdemxyh20001geshdzjobrjh" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ptrace-dex-android-hack/">ptrace, dex, android, hack</a></li></ul>
@@ -196,7 +216,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/11/20/First-Post/" data-id="cjchq3vfn0005zgshipuurc46" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2017/11/20/First-Post/" data-id="cjdemxyhm0004geshdwugmfig" class="article-share-link">Share</a>
       
       
     </footer>
@@ -241,7 +261,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/11/20/hello-world/" data-id="cjchq3ves0000zgshuvru2jvk" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2017/11/20/hello-world/" data-id="cjdemxygw0000geshbbxz6eji" class="article-share-link">Share</a>
       
       
     </footer>
