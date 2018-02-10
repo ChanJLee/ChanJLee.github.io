@@ -50,7 +50,7 @@
         
           <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
         
-        <a id="nav-search-btn" class="nav-icon" title="Zoeken"></a>
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
       </nav>
       <div id="search-form-wrap">
         <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
@@ -159,13 +159,133 @@
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//1. 注册鼠标事件</span></span><br><span class="line">screen.addEventListener(<span class="string">'mousedown'</span>, down, <span class="literal">false</span>);</span><br><span class="line">screen.addEventListener(<span class="string">'mouseup'</span>, up, <span class="literal">false</span>);</span><br><span class="line">screen.addEventListener(<span class="string">'mousemove'</span>, move, <span class="literal">false</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//2. 回传</span></span><br><span class="line"><span class="keyword">var</span> x = event.pageX - screen.offsetLeft;</span><br><span class="line"><span class="keyword">var</span> y = event.pageY - screen.offsetTop;</span><br><span class="line"><span class="keyword">var</span> lastX = x;</span><br><span class="line"><span class="keyword">var</span> lastY = y;</span><br><span class="line"> 	</span><br><span class="line"><span class="keyword">var</span> json = <span class="string">'&#123;"type": '</span> + type + <span class="string">', "data": &#123; "x": '</span> + lastX + <span class="string">', "y": '</span> + lastY + <span class="string">'&#125;&#125;'</span></span><br><span class="line">ws.send(json);</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>Android模拟点击</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//1. hook input manager</span></span><br><span class="line">sInputManager = (InputManager)InputManager.class.getDeclaredMethod(<span class="string">"getInstance"</span>).invoke(<span class="keyword">null</span>);</span><br><span class="line">sMode = (<span class="keyword">int</span>) InputManager.class.getDeclaredField(<span class="string">"INJECT_INPUT_EVENT_MODE_ASYNC"</span>).get(<span class="keyword">null</span>);</span><br><span class="line">sInjectInputEventMethod = InputManager.class.getMethod(<span class="string">"injectInputEvent"</span>, InputEvent.class, Integer.TYPE);</span><br><span class="line"></span><br><span class="line"><span class="comment">//2. 换算成屏幕坐标</span></span><br><span class="line"><span class="keyword">float</span> x = motionProtocolMessage.data.x * (sScreenWidth / sPictureWidth);</span><br><span class="line"><span class="keyword">float</span> y = motionProtocolMessage.data.y * (sScreenHeight / sPictureHeight);</span><br><span class="line"></span><br><span class="line"><span class="comment">//3. 模拟点击</span></span><br><span class="line">injectMotionEvent(InputDeviceCompat.SOURCE_TOUCHSCREEN, MotionEvent.ACTION_MOVE, SystemClock.uptimeMillis(), x, y, <span class="number">1.0f</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//4. 构造Event</span></span><br><span class="line">MotionEvent event = MotionEvent.obtain(when, SystemClock.uptimeMillis(), action, x, y, pressure, <span class="number">1.0f</span>, <span class="number">0</span>, <span class="number">1.0f</span>, <span class="number">1.0f</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">event.setSource(inputSource);</span><br><span class="line">sInjectInputEventMethod.invoke(sInputManager, event, sMode);</span><br><span class="line">event.recycle();</span><br></pre></td></tr></table></figure></li>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//1. hook input manager</span></span><br><span class="line">sInputManager = (InputManager)InputManager.class.getDeclaredMethod(<span class="string">"getInstance"</span>).invoke(<span class="keyword">null</span>);</span><br><span class="line">sMode = (<span class="keyword">int</span>) InputManager.class.getDeclaredField(<span class="string">"INJECT_INPUT_EVENT_MODE_ASYNC"</span>).get(<span class="keyword">null</span>);</span><br><span class="line">sInjectInputEventMethod = InputManager.class.getMethod(<span class="string">"injectInputEvent"</span>, InputEvent.class, Integer.TYPE);</span><br><span class="line"></span><br><span class="line"><span class="comment">//2. 换算成屏幕坐标</span></span><br><span class="line"><span class="keyword">float</span> x = motionProtocolMessage.data.x * (sScreenWidth / sPictureWidth);</span><br><span class="line"><span class="keyword">float</span> y = motionProtocolMessage.data.y * (sScreenHeight / sPictureHeight);</span><br><span class="line"></span><br><span class="line"><span class="comment">//3. 模拟点击</span></span><br><span class="line">injectMotionEvent(InputDeviceCompat.SOURCE_TOUCHSCREEN, MotionEvent.ACTION_MOVE, SystemClock.uptimeMillis(), x, y, <span class="number">1.0f</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//4. 构造Event</span></span><br><span class="line">MotionEvent event = MotionEvent.obtain(when, SystemClock.uptimeMillis(), action, x, y, pressure, <span class="number">1.0f</span>, <span class="number">0</span>, <span class="number">1.0f</span>, <span class="number">1.0f</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">event.setSource(inputSource);</span><br><span class="line">sInjectInputEventMethod.invoke(sInputManager, event, sMode);</span><br><span class="line">event.recycle();</span><br></pre></td></tr></table></figure>
+</li>
 </ol>
+<h1 id="WHAT-is-asm"><a href="#WHAT-is-asm" class="headerlink" title="WHAT is asm"></a>WHAT is asm</h1><p>ASM是一个java字节码操纵框架，它能被用来动态生成类或者增强既有类的功能。ASM 可以直接产生二进制 class 文件，也可以在类被加载入 Java 虚拟机之前动态改变类行为。Java class 被存储在严格格式定义的 .class文件里，这些类文件拥有足够的元数据来解析类中的所有元素：类名称、方法、属性以及 Java 字节码（指令）。ASM从类文件中读入信息后，能够改变类行为，分析类信息，甚至能够根据用户要求生成新类。</p>
+<p><a href="&quot;http://asm.ow2.org/&quot;">下载地址</a></p>
+<h1 id="Java-class的结构"><a href="#Java-class的结构" class="headerlink" title="Java class的结构"></a>Java class的结构</h1><p><img src="/2018/01/16/无痕埋点原理及其实现/QQ20170710-212357@2x.png" alt="Class的结构"></p>
+<ul>
+<li><p>一个section描述modifiers（比如public, private),name, super class, interfaces, annotations</p>
+</li>
+<li><p>描述field的section，每个section描述modifiers，name<br>, type, annotations</p>
+</li>
+<li><p>描述方法和构造函数的section。每个section描述modifiers, name, parameter types以及annotations。其中它还包含方法的字节码。</p>
+</li>
+</ul>
+<p>源码文件和字节码文件有如下区别：</p>
+<ul>
+<li><p>每个字节码文件都只有一个类，而源码可以包含多个类，其中主类文件包含多个指向内部类的引用。同样内部类也有主类的引用。</p>
+</li>
+<li><p>字节码文件不包含注释</p>
+</li>
+<li><p>字节码文件没有package和import部分，所以都是全类路径。</p>
+</li>
+<li><p>字节码文件含有一个常量池。</p>
+</li>
+</ul>
+<h2 id="内部名称"><a href="#内部名称" class="headerlink" title="内部名称"></a>内部名称</h2><p>一个类的内部名称是一个类的全路径，只不过点变成了斜杠，比如String就是java/lang/String。</p>
+<h2 id="类型描述"><a href="#类型描述" class="headerlink" title="类型描述"></a>类型描述</h2><p>内部名仅用于描述类或接口类型，但是域，java类型是被描述为类型描述符的。</p>
+<p><img src="/2018/01/16/无痕埋点原理及其实现/QQ20170710-214752@2x.png" alt="类型描述"></p>
+<h2 id="方法描述"><a href="#方法描述" class="headerlink" title="方法描述"></a>方法描述</h2><p>方法描述用来描述方法的类型参数，返回类型。</p>
+<p><img src="/2018/01/16/无痕埋点原理及其实现/QQ20170710-215131@2x.png" alt="方法描述"></p>
+<h1 id="ClassVisitor"><a href="#ClassVisitor" class="headerlink" title="ClassVisitor"></a>ClassVisitor</h1><p><img src="/2018/01/16/无痕埋点原理及其实现/QQ20170710-220937@2x.png" alt=""></p>
+<p>ASM使用ClassVisitor来生成以及转换一个编译过的类。</p>
+<p><img src="/2018/01/16/无痕埋点原理及其实现/QQ20170710-221602@2x.png" alt=""></p>
+<p>它的方法调用必须遵循以下的规则。<br>visit必须第一个掉，剩下的最多可以调用一次 visitSource，跟随着可以最多调用一次visitOuterClass。紧接着可以调用任意次数的visitAnnotation和visitAttribute。之后才是任意次数的visitInnerClass，visitField，visitMethod，并且以visitEnd结尾。</p>
+<p>ASM提供了以下几个ClassVisitor的实现类:</p>
+<ul>
+<li>ClassReader</li>
+</ul>
+<p>接受一个比特数组，用以用来分析一个class文件，并且有一个accept方法，接收ClassVisitor，它可以被视为一个时间产生者。</p>
+<ul>
+<li>ClassWriter</li>
+</ul>
+<p>用来处理class的输出内容，可以被视为事件消费者。通过调用toByteArray输出class。</p>
+<h1 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ClassPrinter</span> <span class="keyword">extends</span> <span class="title">ClassVisitor</span> </span>&#123; </span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ClassPrinter</span><span class="params">()</span> </span>&#123;</span><br><span class="line">          <span class="keyword">super</span>(ASM4);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">visit</span><span class="params">(<span class="keyword">int</span> version, <span class="keyword">int</span> access, String name, String signature, String superName, String[] interfaces)</span> </span>&#123;</span><br><span class="line">          System.out.println(name + <span class="string">" extends "</span> + superName + <span class="string">" &#123;"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">visitSource</span><span class="params">(String source, String debug)</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">visitOuterClass</span><span class="params">(String owner, String name, String desc)</span> </span>&#123;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> AnnotationVisitor <span class="title">visitAnnotation</span><span class="params">(String desc, <span class="keyword">boolean</span> visible)</span> </span>&#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">visitAttribute</span><span class="params">(Attribute attr)</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">visitInnerClass</span><span class="params">(String name, String outerName, String innerName, <span class="keyword">int</span> access)</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> FieldVisitor <span class="title">visitField</span><span class="params">(<span class="keyword">int</span> access, String name, String desc, String signature, Object value)</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"    "</span> + desc + <span class="string">" "</span> + name);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> MethodVisitor <span class="title">visitMethod</span><span class="params">(<span class="keyword">int</span> access, String name, String desc, String signature, String[] exceptions)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"    "</span> + name + desc);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">        </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">visitEnd</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"&#125;"</span>);</span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ClassPrinter cp = <span class="keyword">new</span> ClassPrinter();</span><br><span class="line">ClassReader cr = <span class="keyword">new</span> ClassReader(<span class="string">"java.lang.Runnable"</span>);</span><br><span class="line">cr.accept(cp, <span class="number">0</span>);</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">java/lang/Runnable extends java/lang/Object &#123;</span><br><span class="line">          run()V</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="进阶"><a href="#进阶" class="headerlink" title="进阶"></a>进阶</h1><h2 id="修改class文件的版本号"><a href="#修改class文件的版本号" class="headerlink" title="修改class文件的版本号"></a>修改class文件的版本号</h2><p>之前我们都是单独使用ClassReader或者ClassWriter，现在我们尝试把他们组合在一起使用，这也就是如何使用ASM转换一个类的方法。</p>
+<p><img src="/2018/01/16/无痕埋点原理及其实现/C82B5BB8-89AB-45AD-B73B-DAC92F5BC308.png" alt=""></p>
+<p>在这个例子中，raw和result中的内容其实是一样的都是同一个class。</p>
+<p>之前提到ClassVisitor可以作为ClassWriter和ClassReader的事件过滤器，我们看下如何使用<br><img src="/2018/01/16/无痕埋点原理及其实现/E74C9651-359E-4121-83C3-25F0B84F9B0A.png" alt=""></p>
+<p>在这个例子里，raw 和result还是同一个class。但是实现方式却不同了，它更像是<br><img src="/2018/01/16/无痕埋点原理及其实现/CD6D7F54-8553-413E-8354-ABDF165EDED6.png" alt=""></p>
+<p>classVisitor的角色就像是Adapter，它处理这所有从reader发送过来的事件并且转发给writer。不过因为没有过滤任何事件，所以最终产物是不变的。<br>但是我们可以尝试做一些过滤：<br><img src="/2018/01/16/无痕埋点原理及其实现/EB115DBC-E0E5-4EBC-A4D8-A46D2304CE11.png" alt=""><br>在这里，事件还是和之前一样，都是发送到writer，出了visit，在visit里，我们修改了class的版本号到java8，所以现在更像是：<br><img src="/2018/01/16/无痕埋点原理及其实现/D5A0C04E-EA88-47F3-8B8D-89912052D371.png" alt=""></p>
+<h3 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h3><p>在之前的例子中，我们只是修改了下class的版本号，但却把整个class文件解析了，这是非常没有效率的一件事。所以，我们应该竟可能的优化我们的代码，比如，我们只解析需要修改的部分，而不是所有部分都解析。</p>
+<p>在ASM里，有这样一个优化规则：</p>
+<ol>
+<li>如果ClassReader察觉到一个MethodVisitor是被一个ClassVisitor返回的，并且这个ClassVisitor是经过他的accept方法传进来的，那么，如果这个ClassVisitor还代理了一个ClassWriter，那么这就意味着，这个方法的内容将不会被转换，所以应用也不会察觉到。</li>
+<li>在刚刚说的case下，ClassReader不会解析这个方法的内容，也不会生成相应的事件，而只是拷贝这个方法的字节数组。</li>
+</ol>
+<p>要满足以上的优化规则，我们只需要让ClassReader和ClassWriter互相引用彼此就可以了。</p>
+<p><img src="/2018/01/16/无痕埋点原理及其实现/28CB3BCB-C6FF-4EB1-863A-E34E2F46987F.png" alt=""></p>
+<h2 id="增加类成员"><a href="#增加类成员" class="headerlink" title="增加类成员"></a>增加类成员</h2><p>当你想要增加成员的时候，你只需要调用对应的visitField方法，不过要注意调用顺序：<br><img src="/2018/01/16/无痕埋点原理及其实现/QQ20170710-221602@2x.png" alt=""></p>
+<p>你不能再visit里面调用visitField，因为之后可能跟着调用visitSource,这是非法的。同样你不能再visitSource/OuterClass/Annotation/Attribute里面调用，所以可能的地方只有visitInnerClass/Field/Method/End。</p>
+<p>如果你把visitField放在visitEnd里面，他将会必定被调用，因为visitEnd是必定被调用的。如果你放在visitInnerClass/Field/Method里，他们可能会被多次调用，所以你必须要采用一些策略来保证只会添加同一个成员一次。</p>
+<p><img src="/2018/01/16/无痕埋点原理及其实现/2A77ECA3-C958-45C8-85A5-A6EE976E3C0F.png" alt=""></p>
+<p><img src="/2018/01/16/无痕埋点原理及其实现/5CED5ADD-F58F-40D9-A5D3-DBE2648DBA9B.png" alt=""></p>
+<h1 id="what-is-transform"><a href="#what-is-transform" class="headerlink" title="what is transform"></a>what is transform</h1><p>从1.5开始，gradle插件包含了一个叫Transform的API，这个API允许第三方插件在class文件转为为dex文件前操作编译好的class文件，这个API的目标就是简化class文件的自定义的操作而不用对Task进行处理，并且可以更加灵活地进行操作。</p>
+<h1 id="Transform-各个方法的含义"><a href="#Transform-各个方法的含义" class="headerlink" title="Transform 各个方法的含义"></a>Transform 各个方法的含义</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TransformImpl</span> <span class="keyword">extends</span> <span class="title">Transform</span> </span>&#123;</span><br><span class="line">    Project project</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">TransformTest</span><span class="params">(Project project)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.project = project</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function">String <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"Beaver"</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    Set&lt;QualifiedContent.ContentType&gt; getInputTypes() &#123;</span><br><span class="line">        <span class="keyword">return</span> TransformManager.CONTENT_CLASS;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    Set&lt;QualifiedContent.Scope&gt; getScopes() &#123;</span><br><span class="line">        <span class="keyword">return</span> TransformManager.SCOPE_FULL_PROJECT;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">isIncremental</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">transform</span><span class="params">(Context context, Collection&lt;TransformInput&gt; inputs, Collection&lt;TransformInput&gt; referencedInputs,  TransformOutputProvider outputProvider, <span class="keyword">boolean</span> isIncremental)</span> <span class="keyword">throws</span>     IOException, TransformException, InterruptedException </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>getName() 是transform的名称</p>
+</li>
+<li><p>getInputTypes() 指明transform的输入类型 一般有class, resource这几种</p>
+</li>
+<li><p>getScopes() 指明transform的作用范围 一般有PROJECT， SUB_PROJECTS等等</p>
+</li>
+<li><p>isIncremental() 是否是增量的</p>
+</li>
+<li><p>transform(…) 具体处理业务的地方</p>
+</li>
+</ul>
+<p>比如Proguard这个Transform有两种输入文件，一种是class文件（含jar），另一种是资源文件，这个Task是做混淆用的，class文件就是ProGuardTransform依赖的上一个Transform的输出产物，而资源文件可以是混淆时使用的配置文件。</p>
+<p>因此根据上面的规则，这个Transform最终在控制台显示的名字就是</p>
+<blockquote>
+<p>transformClassesAndResourcesWithProguardForDebug</p>
+</blockquote>
+<h1 id="注册transform"><a href="#注册transform" class="headerlink" title="注册transform"></a>注册transform</h1><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> android = project.extensions.getByType(AppExtension)</span><br><span class="line"><span class="keyword">def</span> transform = <span class="keyword">new</span> TransformImpl(project)</span><br><span class="line">android.registerTransform(transform)</span><br></pre></td></tr></table></figure>
+<h1 id="with-asm"><a href="#with-asm" class="headerlink" title="with asm"></a>with asm</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">transform</span><span class="params">(Context context, Collection&lt;TransformInput&gt; inputs, Collection&lt;TransformInput&gt; referencedInputs, TransformOutputProvider outputProvider, <span class="keyword">boolean</span> isIncremental)</span> <span class="keyword">throws</span> IOException, TransformException, InterruptedException </span>&#123;</span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">        * 遍历输入文件</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        inputs.each &#123; TransformInput input -&gt;</span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">        * 遍历目录</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        input.directoryInputs.each &#123; DirectoryInput directoryInput -&gt;</span><br><span class="line">        <span class="comment">/** </span></span><br><span class="line"><span class="comment">        * 获得产物的目录</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        File dest = outputProvider.getContentLocation(directoryInput.name, directoryInput.contentTypes, directoryInput.scopes, Format.DIRECTORY);</span><br><span class="line">        String buildTypes = directoryInput.file.name</span><br><span class="line">        String productFlavors = directoryInput.file.parentFile.name</span><br><span class="line">        <span class="comment">//这里进行我们的处理 TODO</span></span><br><span class="line">        project.logger.error <span class="string">"Copying $&#123;directoryInput.name&#125; to $&#123;dest.absolutePath&#125;"</span></span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">        * 处理完后拷到目标文件</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        FileUtils.copyDirectory(directoryInput.file, dest);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 遍历jar</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    input.jarInputs.each &#123; </span><br><span class="line">        JarInput jarInput -&gt; </span><br><span class="line">            String destName = jarInput.name;</span><br><span class="line">            <span class="comment">/**</span></span><br><span class="line"><span class="comment">            * 重名名输出文件,因为可能同名,会覆盖</span></span><br><span class="line"><span class="comment">            */</span></span><br><span class="line">            def hexName = DigestUtils.md5Hex(jarInput.file.absolutePath);</span><br><span class="line">            <span class="keyword">if</span> (destName.endsWith(<span class="string">".jar"</span>)) &#123;</span><br><span class="line">                destName = destName.substring(<span class="number">0</span>, destName.length() - <span class="number">4</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">/**</span></span><br><span class="line"><span class="comment">            * 获得输出文件</span></span><br><span class="line"><span class="comment">            */</span></span><br><span class="line">            File dest = outputProvider.getContentLocation(destName + <span class="string">"_"</span> + hexName, jarInput.contentTypes, jarInput.scopes, Format.JAR);</span><br><span class="line"></span><br><span class="line">            <span class="comment">//处理jar进行字节码注入处理TODO</span></span><br><span class="line"></span><br><span class="line">            FileUtils.copyFile(jarInput.file, dest);</span><br><span class="line">            project.logger.error <span class="string">"Copying $&#123;jarInput.file.absolutePath&#125; to $&#123;dest.absolutePath&#125;"</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="扩展参数"><a href="#扩展参数" class="headerlink" title="扩展参数"></a>扩展参数</h1><p>常见的比如<br>android {<br>    compileSdkVersion ….<br>}</p>
+<p>它的实现其实是首先声明一个类<br><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PluginExtension</span> &#123;</span></span><br><span class="line">    HashSet&lt;String&gt; includePackage = []</span><br><span class="line">    HashSet&lt;String&gt; excludeClass = []</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>之后便是注册</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">project.extensions.create(<span class="string">"hotpatch"</span>, PluginExtension)</span><br></pre></td></tr></table></figure>
+<p>使用的话：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">hotpatch &#123;</span><br><span class="line">    includePackage = [<span class="string">"xxx"</span>]</span><br><span class="line">    excludeClass = [<span class="string">"xxx"</span>]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><h1 id="annotaion的使用"><a href="#annotaion的使用" class="headerlink" title="annotaion的使用"></a>annotaion的使用</h1><p>Annotation的种类：</p>
+<ol>
+<li>SOURCE: 在源文件中有效（即源文件保留）</li>
+<li>CLASS: 在class文件中有效（即class保留）</li>
+<li>RUNTIME: 在运行时有效（即运行时保留）</li>
+</ol>
+<h2 id="CASE-1-标注某些类不可以被RENAME"><a href="#CASE-1-标注某些类不可以被RENAME" class="headerlink" title="CASE 1 标注某些类不可以被RENAME"></a>CASE 1 标注某些类不可以被RENAME</h2><p>我使用的是source级别的，即不会保留到class文件中</p>
+<h2 id="CASE-2-对于某些细粒度操作，比如禁止对某个方法HOOK"><a href="#CASE-2-对于某些细粒度操作，比如禁止对某个方法HOOK" class="headerlink" title="CASE 2 对于某些细粒度操作，比如禁止对某个方法HOOK"></a>CASE 2 对于某些细粒度操作，比如禁止对某个方法HOOK</h2><p>我使用的是class级别的注解，因为我们需要在处理class的时候能够读取到，所以要求annotation在class文件中依然存在，但是我们又不想让他出现在Jvm中，所以选择class级别的。</p>
+<h1 id="屏幕size的获取"><a href="#屏幕size的获取" class="headerlink" title="屏幕size的获取"></a>屏幕size的获取</h1><p>普通的方法都是需要获取context才能拿到系统的一些信息。但是在纯java代码中，是没有方法构造一个context出来的。这时候如果想要找到一个可靠的方式，不能只关注于从代码中获取到size，而应该考虑是否可以由外部传进来。幸运的是在查看adb命令行参数的时候我看到了相关的参数。我们只需要在输入命令后通过unix自带的一些工具就可以拿到size参数。</p>
+<h1 id="插件port占用的问题（配合adb-kill-process）"><a href="#插件port占用的问题（配合adb-kill-process）" class="headerlink" title="插件port占用的问题（配合adb kill process）"></a>插件port占用的问题（配合adb kill process）</h1><p>插件port占用主要是因为我们在运行后台程序之后，这时候如果和pc断开，后台的服务还是在跑的，下次我们再连的时候只能通过重新运行shell脚本，但是这时候又会创建服务。所以存在端口冲突，这时候解决方案有两个：</p>
+<ol>
+<li>创建的时候不指定端口，由系统分配</li>
+<li>每次都kill之前的服务，再在同样的端口上创建</li>
+</ol>
+<p>对于第一种方案，我们不可能采用，因为之后需要做端口转发，在不指定端口的情况下实现起来比较麻烦，需要去查询端口的pid，所以我们采用的是第二种</p>
+<h1 id="ROM之间的差异"><a href="#ROM之间的差异" class="headerlink" title="ROM之间的差异"></a>ROM之间的差异</h1><ol>
+<li>小米手机模拟点击无效的问题</li>
+<li>华为，魅族 menu模拟按键无效的问题</li>
+<li>小米socket断开的问题</li>
+</ol>
+<p>在确认是否是ROM原因的时候，一定要在其他ROM上做尝试，如果别的ROM没问题，那么可以断定就是当前ROM的问题。这时候要做的就是登陆他们的开发者论坛，搜一搜往日的帖子，有很大的概率能够找到答案。</p>
+<h1 id="IPC的选择"><a href="#IPC的选择" class="headerlink" title="IPC的选择"></a>IPC的选择</h1><ol>
+<li>MessageManager</li>
+<li>Binder</li>
+<li>SOCKET</li>
+<li>管道</li>
+<li>etc</li>
+</ol>
+<h1 id="ASM的优化，不改变栈大小实现插入打点字节码"><a href="#ASM的优化，不改变栈大小实现插入打点字节码" class="headerlink" title="ASM的优化，不改变栈大小实现插入打点字节码"></a>ASM的优化，不改变栈大小实现插入打点字节码</h1><p>每一个方法都是一个帧，每个帧都有一个运算符栈，如果是使用临时变量的形式，可能会不止使用一个临时变量，因此可能会使得我们去修改帧，这就无形的给自己增加难度。所以我们使用静态成员，这样不会增加帧大小。</p>
+<h1 id="唯一区分View的思路"><a href="#唯一区分View的思路" class="headerlink" title="唯一区分View的思路"></a>唯一区分View的思路</h1><p>之前参考过美团的。他是采用的树层级来区分一个view。顾名思义就是计算一个view在布局中的深度，所以如果有view隐藏或者显示，可能会影响到这个深度。因此收集的信息存在很大的误差。因而我并没有采用这个方案，而是反射id在R文件中的field名字来确定。R文件我们是不混淆的，所以可以确保可读性。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/01/16/无痕埋点原理及其实现/" data-id="cjdhb07xs00030jsh1qf5ir28" class="article-share-link">Delen</a>
+      <a data-url="http://yoursite.com/2018/01/16/无痕埋点原理及其实现/" data-id="cjdhb28y100041pshslzedrd8" class="article-share-link">Share</a>
       
       
     </footer>
@@ -234,7 +354,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/11/26/Dump-dex/" data-id="cjdhb07xd00000jshri7s0mee" class="article-share-link">Delen</a>
+      <a data-url="http://yoursite.com/2017/11/26/Dump-dex/" data-id="cjdhb28xi00001pshz010ai0p" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ptrace-dex-android-hack/">ptrace, dex, android, hack</a></li></ul>
@@ -274,7 +394,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/11/20/First-Post/" data-id="cjdhb07xj00010jshn3d8vogv" class="article-share-link">Delen</a>
+      <a data-url="http://yoursite.com/2017/11/20/First-Post/" data-id="cjdhb28xn00011psh3xhsj9d3" class="article-share-link">Share</a>
       
       
     </footer>
@@ -319,7 +439,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/11/20/hello-world/" data-id="cjdhb07y100040jshddz99pgo" class="article-share-link">Delen</a>
+      <a data-url="http://yoursite.com/2017/11/20/hello-world/" data-id="cjdhb28xt00031pshk41ovp0e" class="article-share-link">Share</a>
       
       
     </footer>
@@ -339,7 +459,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Labels</h3>
+    <h3 class="widget-title">Tags</h3>
     <div class="widget">
       <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/ptrace-dex-android-hack/">ptrace, dex, android, hack</a></li></ul>
     </div>
@@ -358,7 +478,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Archieven</h3>
+    <h3 class="widget-title">Archives</h3>
     <div class="widget">
       <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">January 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li></ul>
     </div>
@@ -368,7 +488,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Recente berichten</h3>
+    <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
         
