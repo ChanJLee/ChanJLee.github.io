@@ -11,10 +11,12 @@
 <meta property="og:url" content="http://yoursite.com/2018/01/16/无痕埋点原理及其实现/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="背景 现在发现自己的拖延症是越来越严重了，最近一直在忙于写自己的一些库，拉下了更新博客，这篇博客创建于一月，然而我在一个月后才开始写。关于无痕打点，我在本科的时候实现了一套，当时打算在扇贝的app中使用。不过后来可能考虑到要实现一套后台，公司还是使用了腾讯推出的无痕埋点库。不过，你懂的，第三方库总需要一些跟他库功能毫无关系的权限，流不流氓心里自然明了。  什么是无痕埋点 前端自动采集全部事件并上报">
-<meta property="og:updated_time" content="2018-02-08T15:25:00.000Z">
+<meta property="og:image" content="http://yoursite.com/2018/01/16/无痕埋点原理及其实现/QQ20170703-222957@2x.png">
+<meta property="og:updated_time" content="2018-02-10T11:54:48.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="无痕埋点原理及其实现">
 <meta name="twitter:description" content="背景 现在发现自己的拖延症是越来越严重了，最近一直在忙于写自己的一些库，拉下了更新博客，这篇博客创建于一月，然而我在一个月后才开始写。关于无痕打点，我在本科的时候实现了一套，当时打算在扇贝的app中使用。不过后来可能考虑到要实现一套后台，公司还是使用了腾讯推出的无痕埋点库。不过，你懂的，第三方库总需要一些跟他库功能毫无关系的权限，流不流氓心里自然明了。  什么是无痕埋点 前端自动采集全部事件并上报">
+<meta name="twitter:image" content="http://yoursite.com/2018/01/16/无痕埋点原理及其实现/QQ20170703-222957@2x.png">
   
     <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -54,7 +56,7 @@
         
           <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
         
-        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+        <a id="nav-search-btn" class="nav-icon" title="Zoeken"></a>
       </nav>
       <div id="search-form-wrap">
         <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
@@ -110,11 +112,64 @@
 <p>至于如何定位，就是通过</p>
 <p>[activity]_[view<em>id]</em>[texture] 来实现</p>
 <p>activity 指明当前是在哪个页面，view id可以通过反射R类拿到field的name，这样可以避免每次view_id都不同的情况，虽然field name也可能变，但是一个可读性的标示总是比数字要好很多的。texture就是当前这个控件上的文案，通常button上的文案都不会有特殊字符，当然为了做到万无一失，你可以通过特殊的编码来使得这些文案不会出现奇怪的字符。</p>
+<h3 id="绑定业务数据"><a href="#绑定业务数据" class="headerlink" title="绑定业务数据"></a>绑定业务数据</h3><p><br>你可以选择在服务器端绑定也可以在客户端绑定，如果是在服务端绑定，你可以在客户端每次请求相关api的时候打上一个点，之后再和打点数据merge。</p>
+<h2 id="详细实现"><a href="#详细实现" class="headerlink" title="详细实现"></a>详细实现</h2><h3 id="可视化埋点之投屏实现"><a href="#可视化埋点之投屏实现" class="headerlink" title="可视化埋点之投屏实现"></a>可视化埋点之投屏实现</h3><h1 id="常见的投屏方案"><a href="#常见的投屏方案" class="headerlink" title="常见的投屏方案"></a>常见的投屏方案</h1><ol>
+<li>View.getDrawingCache()</li>
+</ol>
+<p>这是最常见的应用内截屏方法，这个函数的原理就是通过view的Cache来获取一个bitmap对象，然后保存成图片文件，这种截屏方式非常的简单，但是局限行也很明显，首先它只能截取应用内部的界面，甚至连状态栏都不能截取到。其次是对某些view的兼容性也不好，比如webview内的内容也无法截取。</p>
+<ol>
+<li>读取/dev/graphics/fb0</li>
+</ol>
+<p>因为Android是基于linux内核，所以我们也能在android中找到framebuffer这个设备，我们可以通过读/dev/graphics/fb0这个帧缓存文件中的数据来获取屏幕上的内容，但是这个文件是system权限的，所以只有通过root才能读取到其中的内容，并且直接通过framebuffer读取出来的画面还需要转换成rgb才能正常显示。</p>
+<ol>
+<li>反射调用SurfaceControl.screenshot()或者Surface.screenshot()</li>
+</ol>
+<p>SurfaceControl.screenshot()(低版本是Surface.screenshot())是系统内部提供的截屏函数，但是这个函数是@hide的，所以无法直接调用，需要反射调用，并且如果是用户进程，即使是反射也拿不到数据。</p>
+<ol>
+<li>screencap -p xxx.png/screenshot xxx.png</li>
+</ol>
+<p>这两个是在shell下调用的命令，通过adb shell可以直接截图。</p>
+<ol>
+<li>MediaProjection,VirtualDisplay (version &gt;= 5.0)</li>
+</ol>
+<p>在5.0以后，google开放了截屏的接口，可以通过”虚拟屏幕”来录制和截取屏幕，不过因为这种方式会弹出确认对话框，并且只在5.0上有效。</p>
+<h1 id="投屏方案的选择"><a href="#投屏方案的选择" class="headerlink" title="投屏方案的选择"></a>投屏方案的选择</h1><p>vysor选择的是三种方案，通过分析源码得知，vysor通过发射调用SurfaceControl.screenshot()或者Surface.screenshot(), 但是，如果是用户进程，即使发射了也是拿不到数据的，这时候就需要提权，如果能够拿到system权限，那么就可以很轻松的获取到数据，并且也不需要做什么特殊的处理，直接将拿到的图片发送给web端显示就可以了。我们的实现是通过app_proces，它是拥有system权限的。追溯其父进程它是init。</p>
+<p><img src="/2018/01/16/无痕埋点原理及其实现/QQ20170703-222957@2x.png" alt="init进程"></p>
+<h1 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h1><ol>
+<li>通过运行god.sh执行<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">export CLASSPATH=/data/app/$package-1/base.apk;exec app_process /system/bin com.shanbay.beaver.server.Main $width $height</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>其中CLASSPATH指定类加载路径，exec执行app_process（system/bin目录下）</p>
+<ol>
+<li><p>app_process运行纯java代码：<br>创建web socket服务器</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">WebSocketServer webSocketServer = <span class="keyword">new</span> BeaverServer(<span class="keyword">new</span> InetSocketAddress(WEB_LISTEN_PORT));</span><br><span class="line">            webSocketServer.start();</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>port转发<br>在android上如果创建套接字服务器的话，端口是不能被外界感知的，也就是说在一个局域网里，即使android客户端有54321这个服务器端口外部也不能访问。这时候需要通过adb对端口进行转发：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adb forward tcp:56789 tcp:56789</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>adb指定对android端56789端口的访问都转换到pc的56789端口</p>
+<ol>
+<li><p>web端连接服务器</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//1. 指定websocket连接的地址</span></span><br><span class="line"><span class="keyword">var</span> ws = <span class="keyword">new</span> WebSocket(<span class="string">'ws://localhost:56789'</span>);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>发送截图</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//1. hook api</span></span><br><span class="line"><span class="keyword">if</span> (Build.VERSION.SDK_INT &lt;= <span class="number">17</span>) &#123;</span><br><span class="line">    mSurfaceName = <span class="string">"android.view.Surface"</span>;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    mSurfaceName = <span class="string">"android.view.SurfaceControl"</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//2. 获取bitmap</span></span><br><span class="line">Bitmap bitmap = (Bitmap) Class.forName(mSurfaceName)</span><br><span class="line">                                .getDeclaredMethod(<span class="string">"screenshot"</span>, <span class="keyword">new</span> Class[]&#123;Integer.TYPE, Integer.TYPE&#125;)</span><br><span class="line">                                .invoke(<span class="keyword">null</span>, sPictureWidth, sPictureHeight);</span><br><span class="line"><span class="comment">//3. 对图片做旋转处理</span></span><br><span class="line">Matrix matrix = <span class="keyword">new</span> Matrix();</span><br><span class="line">matrix.setRotate(sRotate);</span><br><span class="line">Bitmap resultBitmap = Bitmap.createBitmap(bitmap, <span class="number">0</span>, <span class="number">0</span>, bitmap.getWidth(), bitmap.getHeight(), matrix, <span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//4. 设置流头部                        </span></span><br><span class="line">ByteArrayOutputStream out = <span class="keyword">new</span> ByteArrayOutputStream();</span><br><span class="line">out.write(<span class="keyword">new</span> <span class="keyword">byte</span>[]&#123;CODE_IMAGE&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">//5. 写回客户端</span></span><br><span class="line">resultBitmap.compress(Bitmap.CompressFormat.JPEG, <span class="number">100</span>, out);                    </span><br><span class="line"><span class="keyword">byte</span>[] data = out.toByteArray();</span><br><span class="line"><span class="keyword">synchronized</span> (mWebSockets) &#123;</span><br><span class="line">    <span class="keyword">for</span> (WebSocket webSocket : mWebSockets) &#123;</span><br><span class="line">        webSocket.send(data);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>客户端显示</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//读取二进制数据</span></span><br><span class="line">ws.onmessage = <span class="function"><span class="keyword">function</span>(<span class="params">event</span>) </span>&#123;</span><br><span class="line">	<span class="keyword">var</span> fileReader = <span class="keyword">new</span> FileReader();</span><br><span class="line">	fileReader.onload = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">		<span class="keyword">var</span> result = <span class="keyword">new</span> <span class="built_in">Uint8Array</span>(<span class="keyword">this</span>.result);</span><br><span class="line">		<span class="keyword">var</span> type = result[<span class="number">0</span>];</span><br><span class="line">		<span class="keyword">var</span> data = event.data.slice(<span class="number">1</span>, event.data.size);</span><br><span class="line">		<span class="keyword">if</span> (type == CODE_IMAGE) &#123;</span><br><span class="line">			<span class="comment">//根据头部判断类型</span></span><br><span class="line">			handleImage(data);</span><br><span class="line">		&#125; <span class="keyword">else</span> <span class="keyword">if</span> (type == CODE_CHECK_POINT) &#123;</span><br><span class="line">			handleCheckPoint(data);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	fileReader.readAsArrayBuffer(event.data);</span><br><span class="line">	fileReader.result;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="comment">//html5 canvas绘制</span></span><br><span class="line"><span class="keyword">var</span> blob  = <span class="keyword">new</span> Blob([data], &#123;<span class="attr">type</span>: <span class="string">"image/jpg"</span>&#125;);</span><br><span class="line"><span class="keyword">var</span> img = <span class="keyword">new</span> Image();</span><br><span class="line">img.onload = <span class="function"><span class="keyword">function</span> (<span class="params">e</span>) </span>&#123;</span><br><span class="line">    ctx.drawImage(img, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">    <span class="built_in">window</span>.URL.revokeObjectURL(img.src);    </span><br><span class="line">	img = <span class="literal">null</span>;</span><br><span class="line">&#125;;</span><br><span class="line">img.onerror = img.onabort = <span class="function"><span class="keyword">function</span> (<span class="params">e</span>) </span>&#123;    </span><br><span class="line">	img = <span class="literal">null</span>;</span><br><span class="line">&#125;;</span><br><span class="line">img.src = <span class="built_in">window</span>.URL.createObjectURL(blob);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>客户端回传点击事件</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//1. 注册鼠标事件</span></span><br><span class="line">screen.addEventListener(<span class="string">'mousedown'</span>, down, <span class="literal">false</span>);</span><br><span class="line">screen.addEventListener(<span class="string">'mouseup'</span>, up, <span class="literal">false</span>);</span><br><span class="line">screen.addEventListener(<span class="string">'mousemove'</span>, move, <span class="literal">false</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//2. 回传</span></span><br><span class="line"><span class="keyword">var</span> x = event.pageX - screen.offsetLeft;</span><br><span class="line"><span class="keyword">var</span> y = event.pageY - screen.offsetTop;</span><br><span class="line"><span class="keyword">var</span> lastX = x;</span><br><span class="line"><span class="keyword">var</span> lastY = y;</span><br><span class="line"> 	</span><br><span class="line"><span class="keyword">var</span> json = <span class="string">'&#123;"type": '</span> + type + <span class="string">', "data": &#123; "x": '</span> + lastX + <span class="string">', "y": '</span> + lastY + <span class="string">'&#125;&#125;'</span></span><br><span class="line">ws.send(json);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Android模拟点击</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//1. hook input manager</span></span><br><span class="line">sInputManager = (InputManager)InputManager.class.getDeclaredMethod(<span class="string">"getInstance"</span>).invoke(<span class="keyword">null</span>);</span><br><span class="line">sMode = (<span class="keyword">int</span>) InputManager.class.getDeclaredField(<span class="string">"INJECT_INPUT_EVENT_MODE_ASYNC"</span>).get(<span class="keyword">null</span>);</span><br><span class="line">sInjectInputEventMethod = InputManager.class.getMethod(<span class="string">"injectInputEvent"</span>, InputEvent.class, Integer.TYPE);</span><br><span class="line"></span><br><span class="line"><span class="comment">//2. 换算成屏幕坐标</span></span><br><span class="line"><span class="keyword">float</span> x = motionProtocolMessage.data.x * (sScreenWidth / sPictureWidth);</span><br><span class="line"><span class="keyword">float</span> y = motionProtocolMessage.data.y * (sScreenHeight / sPictureHeight);</span><br><span class="line"></span><br><span class="line"><span class="comment">//3. 模拟点击</span></span><br><span class="line">injectMotionEvent(InputDeviceCompat.SOURCE_TOUCHSCREEN, MotionEvent.ACTION_MOVE, SystemClock.uptimeMillis(), x, y, <span class="number">1.0f</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//4. 构造Event</span></span><br><span class="line">MotionEvent event = MotionEvent.obtain(when, SystemClock.uptimeMillis(), action, x, y, pressure, <span class="number">1.0f</span>, <span class="number">0</span>, <span class="number">1.0f</span>, <span class="number">1.0f</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">event.setSource(inputSource);</span><br><span class="line">sInjectInputEventMethod.invoke(sInputManager, event, sMode);</span><br><span class="line">event.recycle();</span><br></pre></td></tr></table></figure></li>
+</ol>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/01/16/无痕埋点原理及其实现/" data-id="cjdenmps80004mash42nufdyg" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2018/01/16/无痕埋点原理及其实现/" data-id="cjdhb07xs00030jsh1qf5ir28" class="article-share-link">Delen</a>
       
       
     </footer>
@@ -125,7 +180,7 @@
   
   
     <a href="/2017/11/26/Dump-dex/" id="article-nav-older" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Older</strong>
+      <strong class="article-nav-caption">Ouder</strong>
       <div class="article-nav-title">Dump dex</div>
     </a>
   
@@ -143,7 +198,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Tags</h3>
+    <h3 class="widget-title">Labels</h3>
     <div class="widget">
       <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/ptrace-dex-android-hack/">ptrace, dex, android, hack</a></li></ul>
     </div>
@@ -162,7 +217,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Archives</h3>
+    <h3 class="widget-title">Archieven</h3>
     <div class="widget">
       <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">January 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li></ul>
     </div>
@@ -172,7 +227,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Recent Posts</h3>
+    <h3 class="widget-title">Recente berichten</h3>
     <div class="widget">
       <ul>
         
